@@ -1,0 +1,34 @@
+/* Daily overview and National Day road notes. Distances are intentionally not invented. */
+(()=>{'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const amap='https://ditu.amap.com/dir';
+const sources={
+ gansu:['甘肃经济日报｜2026国庆路网出行预测','https://gansu.gansudaily.com.cn/system/2026/09/28/031438828.shtml'],
+ police:['甘肃公安交管总队｜2025国庆交通提示','https://gansu.gscn.com.cn/system/2025/09/30/013392417.shtml'],
+ jiayuguan:['嘉峪关市政府｜2026节前景区及收费站疏导','https://wap.jyg.gov.cn/xwzx/bdyw/art/2026/art_0d599b41dc6b4a77a4d4948c03efad4e.html'],
+ yinchuan:['银川交警｜2025国庆返程提示','https://police.yinchuan.gov.cn/xwdt/cjjx/jtjcfj/202510/t20251013_5051115.html'],
+ sunrise:['美国海军天文台｜2026-10-05居延海附近日出','https://aa.usno.navy.mil/api/rstt/oneday?date=2026-10-05&coords=42.33354,101.243935&tz=8']
+};
+const days=[
+ {n:1,route:'汉中 → 武威',visit:'0小时；仅途中休息',food:'武威晚餐',stay:'凉州宾馆候选',risk:'中',delay:'0—30分钟情景',road:'甘肃省预测10月1日上午有出城高峰；这不能直接换算成汉中至武威全程堵车分钟。',action:'尽量避开已知高峰，按实际路线和疲劳程度调整当天终点。',refs:['gansu']},
+ {n:2,route:'武威 → 张掖七彩丹霞 → 嘉峪关',visit:'七彩丹霞3—4小时',food:'张掖午餐／嘉峪关晚餐',stay:'酒钢宾馆候选',risk:'中',delay:'0—30分钟情景；景区排队另计',road:'甘肃省预测10月2日上午仍有出城车流；嘉峪关已部署景区停车和收费站疏导。没有丹霞入口该日的可量化排队样本。',action:'丹霞离园时间由21:15接机倒排；景区排队明显时缩短游览区域。',refs:['gansu','jiayuguan']},
+ {n:3,route:'嘉峪关 → 额济纳；航天参观仅预约后绕行',visit:'航天参观待确认；否则不加景点',food:'抵达额济纳后用餐',stay:'大漠酒店／诺金酒店候选',risk:'中',delay:'固定拥堵数据不足；不填虚假分钟',road:'甘肃公安2025年国庆提示将G213酒泉至额济纳段列为事故易发路段；该信息不等于一定堵车。',action:'核对实际参观结束地点；保持白天驾驶，进镇前加油并留有弹性。',refs:['police']},
+ {n:4,route:'达来呼布镇 ↔ 额济纳胡杨林',visit:'胡杨林6—8小时',food:'景区内简餐／回镇晚餐',stay:'额济纳同一酒店续住',risk:'高',delay:'0—60分钟情景；停车及摆渡另计',road:'国庆胡杨观赏期的景区入口与停车集中是主要瓶颈；未取得10月4日分时段的官方排队分钟或概率。',action:'按实际开园时间尽早抵达，带好饮水和简餐；保留完整游览日。',refs:[]},
+ {n:5,route:'额济纳 → 居延海日出〔有条件〕→ 银川河东机场 → 银川',visit:'居延海约1小时；赶机不成立时取消',food:'途中正常休息用餐／送机后银川晚餐',stay:'银川中心智选假日候选',risk:'路况中／赶机高',delay:'公路堵车无法量化；另留至少1小时缓冲',road:'日出约07:16，08:30离开居延海后仍需长距离转场。没有经高德核实的居延海至机场路线值，不应把日出与21:40航班视为可稳定衔接。',action:'出发前用高德按酒店、居延海、机场三点实测：若正常休息后不能在19:10前到机场，取消日出支线并直赴机场。',refs:['sunrise']},
+ {n:6,route:'银川 → 沙坡头 → 中卫',visit:'沙坡头5—6小时',food:'银川早餐／中卫晚餐',stay:'中卫沙坡头希尔顿欢朋候选',risk:'中',delay:'0—30分钟情景；景区排队另计',road:'2025年银川交警提示返程可关注银川出入口，银川往返中卫可视路况比较G1816乌玛高速。',action:'当日看高德实时路线再决定高速；游览后住中卫，不折返银川。',refs:['yinchuan']},
+ {n:7,route:'中卫 → 汉中',visit:'0小时；全天返程',food:'途中顺路用餐',stay:'返抵汉中；必要时增加途中住宿',risk:'中—高',delay:'0—60分钟情景；不能视为保证',road:'甘肃省预测10月7日8:00—20:00返程车流集中；该预测不等于所有路段同时拥堵。',action:'早出发并保留停车休息；遇疲劳或明显延误可增加途中住宿。',refs:['gansu']}
+];
+const style=document.createElement('style');style.textContent=`
+.day-overview{background:#eef2e5;border:1px solid #d3dfc8;border-left:4px solid #b89c4c;padding:21px 24px;margin:0 0 25px;border-radius:4px}.day-overview h4,.road-day h4{font-size:18px;color:#214934;margin:0 0 14px}.day-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 25px}.overview-cell{min-width:0}.overview-cell span{display:block;font-size:11px;letter-spacing:.06em;color:#607259}.overview-cell strong{font-size:14px;line-height:1.65;color:#263c2e;font-weight:600}.overview-cell a{font-size:12px;display:inline-block;margin-left:8px;text-decoration:underline;text-underline-offset:2px}.overview-method{font-size:12px;color:#596b55;margin:15px 0 0;line-height:1.7}.road-day{margin-top:24px;padding:20px 24px;background:#f6f5ec;border:1px solid #dedcc6;border-radius:4px}.road-day dl{display:grid;grid-template-columns:max-content 1fr;column-gap:18px;row-gap:9px;font-size:13px;line-height:1.8}.road-day dt{color:#637063;font-weight:600}.road-day dd{margin:0;color:#334837}.road-day .risk-high{color:#9c4730}.road-day .risk-medium{color:#8b6b20}.road-day .road-proof{font-size:11px;color:#69736a;margin-top:12px}.road-day .road-proof a{text-decoration:underline;text-underline-offset:2px}.plan-method-note{background:#f2ead8;border-left:4px solid #ad8038;padding:16px 20px;font-size:13px;line-height:1.8;margin:20px 0}.plan-method-note a{text-decoration:underline}.day-card{scroll-margin-top:90px}@media(max-width:650px){.day-overview-grid{grid-template-columns:1fr}.day-overview,.road-day{padding:18px}.road-day dl{grid-template-columns:1fr;row-gap:2px}.road-day dd{margin-bottom:8px}}
+`;document.head.appendChild(style);
+function sourceLinks(d){return d.refs.map(k=>`<a href="${esc(sources[k][1])}" target="_blank" rel="noopener noreferrer">${esc(sources[k][0])} ↗</a>`).join(' · ')}
+for(const d of days){const body=$(`#day-${d.n} .day-body`);if(!body)continue;
+ const overview=document.createElement('section');overview.className='day-overview';overview.setAttribute('aria-label','今日总览');overview.innerHTML=`<h4>今日总览</h4><div class="day-overview-grid"><div class="overview-cell"><span>🚗 行驶路线</span><strong>${esc(d.route)}</strong></div><div class="overview-cell"><span>📏 高德预计公里</span><strong>待具体起终点核对</strong><a href="${amap}" target="_blank" rel="noopener noreferrer">打开高德路线 ↗</a></div><div class="overview-cell"><span>⏱ 高德预计驾驶</span><strong>待具体酒店及路线核对</strong></div><div class="overview-cell"><span>🎫 游玩时间</span><strong>${esc(d.visit)}</strong></div><div class="overview-cell"><span>🍽 当日美食</span><strong>${esc(d.food)}</strong></div><div class="overview-cell"><span>🏨 当晚住宿</span><strong>${esc(d.stay)}</strong></div><div class="overview-cell"><span>🛣 国庆路况</span><strong>${esc(d.risk)}</strong></div></div><p class="overview-method">高德路线需按实际酒店、景区入口及航站楼查询；本页未取得可核实的高德公里和驾驶时长，因此不把通用路程预算冒充导航结果。</p>`;body.prepend(overview);
+ const road=document.createElement('section');road.className='road-day';road.setAttribute('aria-label','国庆路况分析');road.innerHTML=`<h4>🛣 国庆路况分析</h4><dl><dt>相对风险</dt><dd class="${d.risk.includes('高')?'risk-high':'risk-medium'}">${esc(d.risk)}（经验判断，非统计概率）</dd><dt>堵车额外时间</dt><dd>${esc(d.delay)}</dd><dt>风险依据</dt><dd>${esc(d.road)}</dd><dt>建议</dt><dd>${esc(d.action)}</dd></dl><p class="road-proof">${sourceLinks(d)||'本日景区没有可核实的同日同路段历史量化资料。'}</p>`;body.appendChild(road);
+}
+const heading=$('#itinerary .section-heading');if(heading){const note=document.createElement('p');note.className='plan-method-note';note.innerHTML='“堵车额外时间”为行程预留情景，<strong>不是按往年样本算出的概率或实时预测</strong>；没有可靠数据的日期直接标明无法量化。出发当天仍需看 <a href="https://ditu.amap.com/dir" target="_blank" rel="noopener noreferrer">高德路线规划</a>及当地交警通告。';heading.after(note)}
+window.tripDayOverviewMarkdown=n=>{const d=days[n-1];return d?`### 今日总览\n\n- 路线：${d.route}\n- 高德预计公里：待具体起终点核对\n- 高德预计驾驶：待具体酒店及路线核对\n- 游玩：${d.visit}\n- 美食：${d.food}\n- 住宿：${d.stay}\n- 路况：${d.risk}\n- 高德查询：${amap}\n\n`:''};
+window.tripRoadDayMarkdown=n=>{const d=days[n-1];return d?`### 国庆路况分析\n\n- 相对风险：${d.risk}（经验判断，非统计概率）\n- 堵车额外时间：${d.delay}\n- 风险依据：${d.road}\n- 建议：${d.action}\n${d.refs.map(k=>`- 依据：[${sources[k][0]}](${sources[k][1]})`).join('\n')}\n\n`:''};
+window.tripRoadMarkdown=()=>`\n## 路况与高德核验边界\n\n堵车时长为保守排程情景，不是基于同路段同日期样本的统计预测；没有量化证据时不填写假概率。高德地图路线规划需以实际酒店地址、景区入口和机场航站楼为起终点。本版未取得高德有效路由结果，因此不伪填公里和预计驾驶时间。${amap}\n`;
+})();
