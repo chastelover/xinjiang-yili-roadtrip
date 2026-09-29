@@ -14,7 +14,7 @@ function calculate(){
  const flight=h*60+m,planned=sh*60+sm,road=v[0]+v[1]+v[2],latest=flight-(road+v[3])*60,arrival=flight-v[3]*60;
  $('#calc-time').textContent=fmt(latest);
  const diff=planned-latest;
- $('#calc-text').textContent='按当前输入，须不晚于'+fmt(latest)+'离开居延海，'+fmt(arrival)+'前抵达机场。'+(diff>0?'计划'+start+'离开，比倒排时刻晚'+Math.floor(diff/60)+'小时'+String(Math.round(diff%60)).padStart(2,'0')+'分；取消居延海或另行调整返京安排。':'计划'+start+'离开在倒排范围内，仍须复核实际高德路线、休息和实时路况。')+' 纯驾驶默认10小时为演示预算，不是高德结果。';
+ $('#calc-text').textContent='按当前输入，须不晚于'+fmt(latest)+'离开居延海，'+fmt(arrival)+'前抵达机场。'+(diff>0?'计划'+start+'离开，比倒排时刻晚'+Math.floor(diff/60)+'小时'+String(Math.round(diff%60)).padStart(2,'0')+'分；取消居延海或另行调整返京安排。':'计划'+start+'离开在倒排范围内，仍须复核实际高德路线、休息和实时路况。')+' 页面预填纯驾驶为2026-09-29高德查询值约10小时28分；变更输入后以输入值为准，出发当天须重新导航。';
  $('#calc-time').classList.toggle('risk',diff>0);
 }
 $$('.calc input').forEach(i=>i.addEventListener('input',calculate));calculate();
@@ -24,11 +24,11 @@ $$('[data-check]').forEach(i=>i.addEventListener('change',()=>updateChecks(true)
 function download(text,name,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)}
 function markdown(){
  let s='# 西北秋行｜2026国庆七日自驾总体计划\n\n日期：2026年10月1日至7日。版本：2026-09-29。全部时刻为北京时间。\n\n';
- s+='## 路线与当前状态\n\n汉中 → 武威 → 张掖七彩丹霞 → 嘉峪关 → 额济纳 → 居延海〔有条件〕→ 银川 → 中卫沙坡头 → 汉中。\n\n10月2日21:15计划抵达嘉峪关。10月5日MU6262已购票，公开常规班表列21:40银川起飞、次日00:05到北京大兴；电子客票上的时刻及北京到达机场须核对。航天参观待预约，10月3日发射与可参加观礼均未确认。\n\n';
+ s+='## 路线与当前状态\n\n汉中 → 武威 → 张掖七彩丹霞 → 嘉峪关 → 额济纳 → 银川河东机场 → 银川 → 中卫沙坡头 → 汉中。居延海日出与现有航班及正常休息预留冲突，本次取消。\n\n10月2日21:15计划抵达嘉峪关。10月5日MU6262已购票，公开常规班表列21:40银川起飞、次日00:05到北京大兴；电子客票上的时刻及北京到达机场须核对。航天参观待预约，10月3日发射与可参加观礼均未确认。\n\n';
  $$('.day-card').forEach(d=>{const n=Number(d.id.replace('day-',''));s+='## '+d.dataset.date+' '+d.dataset.weekday+'｜'+$('.day-title h3',d).textContent+'\n\n';if(window.tripDayOverviewMarkdown)s+=window.tripDayOverviewMarkdown(n);s+=$('.day-intro',d).textContent+'\n\n';$$('.time-slot',d).forEach(e=>s+='### '+$('time',e).textContent+'｜'+$('h4',e).textContent+'\n\n'+$('p',e).textContent+'\n\n');$$('.day-aside>div',d).forEach(e=>s+='**'+$('h4',e).textContent+'：**'+$('p',e).textContent+'\n\n');s+='注意：'+$('.day-note',d).textContent+'\n\n';if(window.tripFoodDayMarkdown)s+=window.tripFoodDayMarkdown(n);if(window.tripStayDayMarkdown)s+=window.tripStayDayMarkdown(n);if(window.tripRoadDayMarkdown)s+=window.tripRoadDayMarkdown(n)});
- s+='## 返京日时间倒排\n\n居延海附近10月5日晨光约06:48，日出约07:16。08:30离开居延海只是意向，需先核对能否在19:10前抵达银川河东机场。若不能，取消日出支线，直接从额济纳前往机场。\n\n最晚离开居延海 = 起飞时间 − 高德实测纯驾驶时间 − 正常休息用餐 − 道路缓冲 − 机场预留。页面演示值不代表高德结果，也不保证赶机。\n\n';
+ s+='## 返京日时间倒排\n\n居延海附近10月5日晨光约06:48、日出约07:16。2026-09-29高德查询：居延海西门停车场至银川河东机场约862.7公里、纯驾驶10小时28分；按1.5小时休息、1小时道路缓冲、2.5小时机场预留，最迟约06:12离开，早于日出。本次从额济纳酒店清晨直达机场，酒店至机场约811.5公里、纯驾驶9小时22分。\n\n最晚离开居延海 = 起飞时间 − 高德纯驾驶时间 − 正常休息用餐 − 道路缓冲 − 机场预留。页面预填为9月29日高德查询值；出发前须重新导航，不保证10月5日路况。\n\n';
  s+='## 行前准备\n\n';$$('.check-row span').forEach(e=>s+='- [ ] '+e.textContent+'\n');
- s+='\n## 资料与核验边界\n\n- [MU6262公开常规班表](https://flights.ctrip.com/international/Schedule/INC-BJS.html)：不是指定日期电子客票。\n- [居延海附近2026-10-05日出](https://aa.usno.navy.mil/api/rstt/oneday?date=2026-10-05&coords=42.33354,101.243935&tz=8)：美国海军天文台按近似坐标计算。\n- [高德路线规划](https://ditu.amap.com/dir)：需按实际地点核对。\n';
+ s+='\n## 资料与核验边界\n\n- [MU6262公开常规班表](https://flights.ctrip.com/international/Schedule/INC-BJS.html)：不是指定日期电子客票。\n- [居延海附近2026-10-05日出](https://aa.usno.navy.mil/api/rstt/oneday?date=2026-10-05&coords=42.33354,101.243935&tz=8)：美国海军天文台按近似坐标计算。\n- [高德路线规划2.0](https://lbs.amap.com/api/webservice/guide/api/newroute)：2026-09-29 16:38按策略32（高德推荐）查询；每日公里与纯驾驶时间按所列地点计算，不代表10月国庆实时路况。\n';
  if(window.tripRoadMarkdown)s+=window.tripRoadMarkdown();if(window.tripStayMarkdown)s+=window.tripStayMarkdown();if(window.tripFoodMarkdown)s+=window.tripFoodMarkdown();return s
 }
 $('#download-plan').addEventListener('click',()=>{if(!window.tripFoodReady){toast('美食资料仍在加载，请稍后导出；加载失败时刷新页面。');return}download(markdown(),'西北秋行_七日总体计划_2026.md','text/markdown;charset=utf-8');toast('总体计划已导出为Markdown')});
